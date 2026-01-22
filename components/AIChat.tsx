@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { sendMessageToGemini } from '../services/geminiService';
 
-export const AIChat: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: '嗨！我是AI老师 🤖。关于刚才那个图，或者AI的未来，你有什么想问的吗？大胆问！', timestamp: Date.now() }
-  ]);
+interface AIChatProps {
+  messages: ChatMessage[];
+  onSendMessage: (text: string) => void;
+  isLoading: boolean;
+}
+
+export const AIChat: React.FC<AIChatProps> = ({ messages, onSendMessage, isLoading }) => {
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -19,30 +20,17 @@ export const AIChat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!input.trim() || isLoading) return;
-
-    const userMessage: ChatMessage = { role: 'user', text: input, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMessage]);
+    onSendMessage(input);
     setInput('');
-    setIsLoading(true);
-
-    try {
-      const responseText = await sendMessageToGemini(input, messages);
-      const botMessage: ChatMessage = { role: 'model', text: responseText, timestamp: Date.now() };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
-    <div className="flex flex-col h-[500px] bg-slate-800/80 backdrop-blur rounded-xl border border-slate-700 overflow-hidden shadow-2xl">
-      <div className="p-4 bg-slate-900 border-b border-slate-700 flex items-center gap-2">
-        <Bot className="text-cyber-accent" />
-        <h3 className="font-bold text-white">向AI提问</h3>
+    <div className="flex flex-col h-[500px] bg-white/90 backdrop-blur rounded-xl border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
+      <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+        <Bot className="text-cyber-accent w-6 h-6" />
+        <h3 className="font-bold text-slate-800">向AI提问</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -52,10 +40,10 @@ export const AIChat: React.FC = () => {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div 
-              className={`max-w-[80%] p-3 rounded-xl text-sm md:text-base leading-relaxed ${
+              className={`max-w-[80%] p-3 rounded-xl text-sm md:text-base leading-relaxed shadow-sm ${
                 msg.role === 'user' 
-                  ? 'bg-cyber-accent text-slate-900 rounded-tr-none' 
-                  : 'bg-slate-700 text-slate-100 rounded-tl-none'
+                  ? 'bg-cyber-accent text-white rounded-tr-none' 
+                  : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200'
               }`}
             >
               {msg.text}
@@ -64,7 +52,7 @@ export const AIChat: React.FC = () => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-slate-700 p-3 rounded-xl rounded-tl-none text-slate-400 text-sm animate-pulse">
+            <div className="bg-slate-100 p-3 rounded-xl rounded-tl-none text-slate-500 text-sm animate-pulse border border-slate-200">
               AI正在思考... 🧠
             </div>
           </div>
@@ -72,7 +60,7 @@ export const AIChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-slate-900 border-t border-slate-700">
+      <div className="p-4 bg-slate-50 border-t border-slate-200">
         <div className="flex gap-2">
           <input
             type="text"
@@ -80,12 +68,12 @@ export const AIChat: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="问我关于光纤、GPU或者未来职业的问题..."
-            className="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyber-accent transition-colors"
+            className="flex-1 bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyber-accent focus:ring-2 focus:ring-cyber-accent/20 transition-all"
           />
           <button 
             onClick={handleSend}
             disabled={isLoading}
-            className="bg-cyber-accent hover:bg-sky-400 text-slate-900 px-4 py-2 rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-cyber-accent hover:bg-sky-600 text-white px-4 py-2 rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <Send size={20} />
           </button>

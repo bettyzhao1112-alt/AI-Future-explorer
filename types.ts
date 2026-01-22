@@ -7,13 +7,18 @@ export enum LayerType {
   FUTURE = 'FUTURE'
 }
 
+export interface Topic {
+  title: string;
+  url: string;
+}
+
 export interface LayerInfo {
   id: LayerType;
   title: string;
   subtitle: string;
   description: string;
   analogy: string; // "Middle School" analogy
-  topics: string[];
+  topics: Topic[];
   icon: string;
   color: string;
 }
